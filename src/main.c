@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <arm_neon.h>
 
 typedef struct Vec2{
 	unsigned int x, y;
@@ -19,6 +20,7 @@ typedef struct Display{
 	unsigned int properties;
 }Display;
 
+//asm   : r * (3,0 - 0.5 *    x * r*r)
 Vec2 vec2_normalize(Vec2 a, Vec2 b){
 	uint32x2_t var = vdupq_n_u32(0);
 	vset_lane_u32();
