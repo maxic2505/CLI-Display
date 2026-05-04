@@ -71,5 +71,10 @@ int main(){
 	sleep(2);
 
 	printf("Resolution: (%d|%d)\nPIXEL_SIZE: %d\n", display.resolution.x, display.resolution.y, display.data_size);
+
+	Vec2f test = vec2f_normalize(display.resolution);
+
+	printf("Normalized Res: %2.2f|%2.2f", test.x, test.y);
+
 	return 0;
 }
