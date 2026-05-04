@@ -2,15 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <arm_neon.h>
-
-typedef struct Vec2{
-	unsigned int x, y;
-}Vec2;
-
-typedef struct Color{
-	unsigned char r, g, b, a;
-}Color;
+#include <math.h>
 
 typedef struct Display{
 	void* data;
@@ -19,14 +11,6 @@ typedef struct Display{
 	unsigned int data_size;
 	unsigned int properties;
 }Display;
-
-//asm   : r * (3,0 - 0.5 *    x * r*r)
-Vec2 vec2_normalize(Vec2 a, Vec2 b){
-	uint32x2_t var = vdupq_n_u32(0);
-	vset_lane_u32();
-	vrsqrte_u32();
-	return (Vec2){0,0};
-}
 
 void setup_grid(Vec2* resolution){
 	struct winsize w;
@@ -65,7 +49,7 @@ unsigned char draw_pixel(Display* display, Vec2 dot, Color dot_color){
 }
 unsigned char draw_line(Display* display, Vec2 a, Vec2 b, Color color){
 	if(!display || !display->data)return 1;
-	
+	return 0;
 }
 
 
