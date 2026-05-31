@@ -1,0 +1,3 @@
+[submodule "libs/SjenaDesk_Engine"]
+	path = libs/SjenaDesk_Engine
+	url = https://github.com/maxic2505/SjenaDesk_Engine

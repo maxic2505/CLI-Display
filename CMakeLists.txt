@@ -4,8 +4,9 @@ project(CLI_Display LANGUAGES C)
 
 set(SOURCES
 	src/main.c
-	src/math.c
 )
 
-add_executable(CLI_Display ${SOURCES})
-target_include_directories(CLI_Display PRIVATE include)
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE include)
+add_subdirectory(libs/SjenaDesk_Engine)
+target_link_libraries(${PROJECT_NAME} PRIVATE SjenaDesk_Engine)
