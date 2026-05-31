@@ -4,6 +4,7 @@ project(CLI_Display LANGUAGES C)
 
 set(SOURCES
 	src/main.c
+	src/Render.c
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

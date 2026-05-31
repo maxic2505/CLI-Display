@@ -4,22 +4,28 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 #include "SjenaDeskEngine/Math/Vector.h"
 
-typedef struct Color{
-    unsigned char r, g, b, a;
+typedef union{
+	unsigned int raw;
+	struct{
+		unsigned char a;
+		unsigned char b;
+		unsigned char g;
+		unsigned char r;
+	};
 }Color;
 
 typedef struct Display{
 	void* data;
-	Vec2 resolution;
-	Vec2 position;
+	uVec2 resolution;
+	uVec2 position;
 	unsigned int data_size;
 	unsigned int properties;
 }Display;
 
-void setup_grid(Vec2* resolution);
-unsigned int pixel_num(Vec2 resolution);
-void render_frame(Display* display);
-unsigned char draw_pixel(Display* display, Vec2 dot, Color dot_color);
-unsigned char draw_line(Display* display, Vec2 a, Vec2 b, Color color);
+unsigned char display_init(Display* display);
+unsigned char render_frame(Display* display);
+unsigned char draw_pixel(Display* display, uVec2 dot, Color dot_color);
+unsigned char draw_line(Display* display, uVec2 a, uVec2 b, Color color);
