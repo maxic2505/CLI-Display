@@ -8,5 +8,6 @@ set(SOURCES
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE include)
+
 add_subdirectory(libs/SjenaDesk_Engine)
 target_link_libraries(${PROJECT_NAME} PRIVATE SjenaDesk_Engine)
