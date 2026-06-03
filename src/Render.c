@@ -6,6 +6,24 @@ void set_flag(unsigned char* s_flag, unsigned char t_flag, unsigned char value){
 	else *s_flag &= ~t_flag;
 }
 
+unsigned char game_object_mgr_create(GameObjectMgr* mgr, size_t length){
+	if(!mgr || mgr->data || length < 1)return 1;
+	mgr->data = malloc(length * sizeof(GameObject));
+	if(!mgr->data)return 1;
+	mgr->length = length;
+	return 0;
+}
+unsigned char game_object_mgr_destroy(GameObjectMgr* mgr){
+	if(!mgr || !mgr->data)return 1;
+	for(int i = 0; i<(mgr->length); i++){
+		if(mgr->data[i].data)free(mgr->data[i].data);
+	}
+	free(mgr->data);
+	mgr->data = NULL;
+	mgr->length = 0;
+	return 0;	
+}
+
 unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec2* position, unsigned char dim, unsigned char flag, void* data){
 	if(!gameObject || !data) return 1;
 

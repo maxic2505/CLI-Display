@@ -25,6 +25,13 @@ typedef struct GameObject{
 	void* data;
 }GameObject;
 
+typedef struct GameObjectMgr{
+	GameObject* data;
+	size_t length;
+}GameObjectMgr;
+
+unsigned char game_object_mgr_create(GameObjectMgr* mgr, size_t length);
+unsigned char game_object_mgr_destroy(GameObjectMgr* mgr);
 unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec2* position, unsigned char dim, unsigned char flag, void* data);
 unsigned char game_object_destroy(GameObject* gameObject);
 

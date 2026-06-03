@@ -44,6 +44,7 @@ int main(){
 	printf("Resolution: (%d|%d)\nPIXEL_SIZE: %d\n", display.resolution.x, display.resolution.y, display.data_size);
 
 	// SAFE CLEANUP
+	game_object_destroy(&gameObjects[0]);
 	free(gameObjects);
 	display_free(&display);
 	return 0;
