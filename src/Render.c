@@ -18,7 +18,7 @@ unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec
 		set_flag(&sys_flag, RESOLUTION_AVAILABLE, 1);
 		data_size += resolution->x*resolution->y;
 		data_size += sizeof(uVec2);
-	}else data_size++;
+	}else data_size += sizeof(Color);
 	if(position){
 		set_flag(&sys_flag, POSITION_AVAILABLE, 1);
 		data_size += (flag & USE_PHYSIC) ? sizeof(uVec2*) : sizeof(uVec2);
@@ -36,12 +36,12 @@ unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec
 	((unsigned char*)sys_data)[offset++] = sys_flag | flag;
 	
 	if(resolution){
-		((uVec2*)(sys_data+offset))[0] = *resolution;
+		*((uVec2*)(sys_data+offset)) = *resolution;
 		offset+=sizeof(uVec2);
 	}
 	if(position){
-		if(flag & USE_PHYSIC)((uVec2**)(sys_data+offset))[0] = position;
-		else ((uVec2*)(sys_data+offset))[0] = *position;
+		if(flag & USE_PHYSIC) *((uVec2**)(sys_data+offset)) = position;
+		else *((uVec2*)(sys_data+offset)) = *position;
 		offset+=(flag & USE_PHYSIC) ? sizeof(uVec2*) : sizeof(uVec2);
 	}
 
@@ -52,6 +52,7 @@ unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec
 	
 	gameObject->data = (void*)sys_data;
 	gameObject->data_size = data_size;
+	return 0;
 }
 
 unsigned char game_object_destroy(GameObject* gameObject){
@@ -71,7 +72,7 @@ unsigned char display_init(Display* display){
 	display->resolution.y = w.ws_row;
 	// Pixel-Data
 	display->data_size = display->resolution.x * display->resolution.y;
-	size_t size = display->data_size*4;
+	size_t size = display->data_size*sizeof(Color);
 	display->data = malloc(size);
 	if(!display->data)return 1;
 	memset(display->data, 0, size);
@@ -79,42 +80,87 @@ unsigned char display_init(Display* display){
 }
 // Display | Setup | 0 = Success
 unsigned char display_free(Display* display){
-	if(!display}return 1;
+	if(!display)return 1;
 	if(display->data){
 		free(display->data);
 		display->data = NULL;
-		display->data_size = {0};
 	}
-	display->resolution = {0};
-	display->position = {0};
-	display->properties = {0};
+	memset(display, 0, sizeof(Display));
+	return 0;
+}
+
+unsigned char display_draw_game_object(Display* display, GameObject* gameObject){
+	if(!display || !display->data || !gameObject || !gameObject->data) return 1;
+
+	Color* pixel = (Color*)display->data;
+
+	unsigned char* data_ptr = (unsigned char*)gameObject->data;
+	unsigned char data_flags = data_ptr[0];
+	uVec2 resolution = {0};
+	uVec2 local_position = {0};
+	uVec2* phys_position = NULL;
+
+	unsigned int pixel_num = (display->resolution.x * display->resolution.y);
+
+	size_t offset = 1; // 1 because data[0] = properties;
+	
+	if(data_flags | BACKGROUND){
+		Color pixel_data = *(Color*)(data_ptr+offset);
+		for(int i = 0; i<pixel_num; i++){
+			((Color*)(display->data))[i] = pixel_data;
+		}
+	}else{
+		if(data_flags & RESOLUTION_AVAILABLE){
+			uVec2 resolution = *((uVec2*)(data_ptr+offset));
+			offset += sizeof(uVec2);
+		}
+		if(data_flags & POSITION_AVAILABLE){
+			if(data_flags & USE_PHYSIC) phys_position = *((uVec2**)(data_ptr+offset)); 
+			else local_position = *((uVec2*)(data_ptr+offset));
+			offset += ((data_flags & USE_PHYSIC) ? sizeof(uVec2*) : sizeof(uVec2));
+		}
+		Color* pixel_data =	(Color*)(data_ptr+offset);
+		for(int i = 0; i<pixel_num; i++){
+			((Color*)(display->data))[i] = pixel_data[i];
+		}
+	}
+	
 	return 0;
 }
 
 unsigned char render_frame(Display* display){
-	printf("\033c\033[H");
+	printf("\033[H");
 	fflush(stdout);
 
-	char* buffer = malloc((display->data_size*20) + display.resolution.y + 1);
+	char* buffer = malloc((display->data_size*20) + display->resolution.y + 1);
 	if(!buffer)return 1;
 	unsigned int rendered = 0;
+	unsigned int rendered_y = 0;
 	unsigned int offset = 0;
 	Color last_color = {0};
+
+	unsigned char first_pixel = 1;
 
 	Color* color_arr = (Color*)display->data;
 	for(int i = 0; i<display->data_size; i++){
 		Color color = color_arr[i];
-		if(color.raw == last_color.raw) offset += sprintf(&buffer[offset], "X");
-		else offset += sprintf(&buffer[offset], "\033[38;2;%d;%d;%dmX", color.r, color.g, color.b); rendered++;
+		if(!first_pixel && color.raw == last_color.raw) buffer[offset++] = 'X';
+		else {
+			offset += sprintf(&buffer[offset], "\033[38;2;%d;%d;%dmX", color.r, color.g, color.b);
+			first_pixel = 0;
+		}
+		rendered++;
 		last_color = color;
 		if(rendered >= display->resolution.x){
-			offset += sprintf(&buffer[offset], "\n");
+			rendered_y++;
+			if(rendered_y < display->resolution.y)buffer[offset++] = '\n';
 			rendered = 0;
 		}
 	}
 	fwrite(buffer, 1, offset, stdout);
 	fflush(stdout);
 	free(buffer);
+	return 0;
 }
 
 unsigned int move_cursor(uVec2 res, uVec2 dot){

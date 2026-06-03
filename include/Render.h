@@ -25,7 +25,7 @@ typedef struct GameObject{
 	void* data;
 }GameObject;
 
-unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec2* position, unsigned char dim, unsigned char flag, void data*);
+unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec2* position, unsigned char dim, unsigned char flag, void* data);
 unsigned char game_object_destroy(GameObject* gameObject);
 
 typedef union{
@@ -47,7 +47,8 @@ typedef struct Display{
 }Display;
 
 unsigned char display_init(Display* display);
-unsigned char display_free(Display* display)
+unsigned char display_free(Display* display);
+unsigned char display_draw_game_object(Display* display, GameObject* gameObject);
 unsigned char render_frame(Display* display);
 unsigned char draw_pixel(Display* display, uVec2 dot, Color dot_color);
 unsigned char draw_line(Display* display, uVec2 a, uVec2 b, Color color);
