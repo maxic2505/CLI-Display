@@ -7,6 +7,27 @@
 #include <string.h>
 #include "SjenaDeskEngine/Math/Vector.h"
 
+#define ACTIVE               1<<0
+#define VISIBLE              1<<1
+#define BACKGROUND           1<<2
+#define USE_PHYSIC           1<<3
+#define USE_TRANSPARENCY     1<<4
+#define RESOLUTION_AVAILABLE 1<<5
+#define POSITION_AVAILABLE   1<<6
+#define DIM_AVAILABLE        1<<7
+
+#define BLACK_LISTED_FLAGS (RESOLUTION_AVAILABLE | POSITION_AVAILABLE | DIM_AVAILABLE)
+
+void set_flag(unsigned char* s_flag, unsigned char t_flag, unsigned char value);
+
+typedef struct GameObject{
+	unsigned long long data_size;
+	void* data;
+}GameObject;
+
+unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec2* position, unsigned char dim, unsigned char flag, void data*);
+unsigned char game_object_destroy(GameObject* gameObject);
+
 typedef union{
 	unsigned int raw;
 	struct{
@@ -26,6 +47,7 @@ typedef struct Display{
 }Display;
 
 unsigned char display_init(Display* display);
+unsigned char display_free(Display* display)
 unsigned char render_frame(Display* display);
 unsigned char draw_pixel(Display* display, uVec2 dot, Color dot_color);
 unsigned char draw_line(Display* display, uVec2 a, uVec2 b, Color color);

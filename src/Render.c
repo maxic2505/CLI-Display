@@ -1,5 +1,67 @@
 #include "Render.h"
 
+void set_flag(unsigned char* s_flag, unsigned char t_flag, unsigned char value){
+	if(!s_flag)return;
+	if(value) *s_flag |= t_flag;
+	else *s_flag &= ~t_flag;
+}
+
+unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec2* position, unsigned char dim, unsigned char flag, void* data){
+	if(!gameObject || !data) return 1;
+
+	if(flag & BLACK_LISTED_FLAGS) return 1;
+	
+	unsigned char sys_flag = 0;
+	size_t data_size = 1;
+
+	if(resolution) {
+		set_flag(&sys_flag, RESOLUTION_AVAILABLE, 1);
+		data_size += resolution->x*resolution->y;
+		data_size += sizeof(uVec2);
+	}else data_size++;
+	if(position){
+		set_flag(&sys_flag, POSITION_AVAILABLE, 1);
+		data_size += (flag & USE_PHYSIC) ? sizeof(uVec2*) : sizeof(uVec2);
+	}
+	if(dim) {
+		set_flag(&sys_flag, DIM_AVAILABLE, 1);
+		data_size++;
+	}
+
+	unsigned char* sys_data = malloc(data_size);
+	if(!sys_data) return 1;
+
+	size_t offset = 0;
+
+	((unsigned char*)sys_data)[offset++] = sys_flag | flag;
+	
+	if(resolution){
+		((uVec2*)(sys_data+offset))[0] = *resolution;
+		offset+=sizeof(uVec2);
+	}
+	if(position){
+		if(flag & USE_PHYSIC)((uVec2**)(sys_data+offset))[0] = position;
+		else ((uVec2*)(sys_data+offset))[0] = *position;
+		offset+=(flag & USE_PHYSIC) ? sizeof(uVec2*) : sizeof(uVec2);
+	}
+
+	Color* color_d = (Color*)(sys_data+offset);
+	for(int i = 0; i < ((resolution) ? (resolution->x*resolution->y) : 1); i++){
+		color_d[i] = ((Color*)data)[i];
+	}
+	
+	gameObject->data = (void*)sys_data;
+	gameObject->data_size = data_size;
+}
+
+unsigned char game_object_destroy(GameObject* gameObject){
+	if(!gameObject || !gameObject->data)return 1;
+	free(gameObject->data);
+	gameObject->data = NULL;
+	gameObject->data_size = 0;
+	return 0;
+}
+
 // Display | Setup | 0 = Success
 unsigned char display_init(Display* display){
 	// Resolution
@@ -15,12 +77,25 @@ unsigned char display_init(Display* display){
 	memset(display->data, 0, size);
 	return 0;
 }
+// Display | Setup | 0 = Success
+unsigned char display_free(Display* display){
+	if(!display}return 1;
+	if(display->data){
+		free(display->data);
+		display->data = NULL;
+		display->data_size = {0};
+	}
+	display->resolution = {0};
+	display->position = {0};
+	display->properties = {0};
+	return 0;
+}
 
 unsigned char render_frame(Display* display){
 	printf("\033c\033[H");
 	fflush(stdout);
 
-	char* buffer = malloc(display->data_size*20);
+	char* buffer = malloc((display->data_size*20) + display.resolution.y + 1);
 	if(!buffer)return 1;
 	unsigned int rendered = 0;
 	unsigned int offset = 0;
