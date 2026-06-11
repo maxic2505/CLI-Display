@@ -8,8 +8,10 @@ void set_flag(unsigned char* s_flag, unsigned char t_flag, unsigned char value){
 
 unsigned char game_object_mgr_create(GameObjectMgr* mgr, size_t length){
 	if(!mgr || mgr->data || length < 1)return 1;
-	mgr->data = malloc(length * sizeof(GameObject));
+	size_t size = length * sizeof(GameObject);
+	mgr->data = malloc(size);
 	if(!mgr->data)return 1;
+	memset(mgr->data, 0, size);
 	mgr->length = length;
 	return 0;
 }
@@ -62,7 +64,9 @@ unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec
 		else *((uVec2*)(sys_data+offset)) = *position;
 		offset+=(flag & USE_PHYSIC) ? sizeof(uVec2*) : sizeof(uVec2);
 	}
-
+	if(dim){
+		((unsigned char*)sys_data)[offset++]=dim;
+	}
 	Color* color_d = (Color*)(sys_data+offset);
 	for(int i = 0; i < ((resolution) ? (resolution->x*resolution->y) : 1); i++){
 		color_d[i] = ((Color*)data)[i];
@@ -79,6 +83,46 @@ unsigned char game_object_destroy(GameObject* gameObject){
 	gameObject->data = NULL;
 	gameObject->data_size = 0;
 	return 0;
+}
+
+uVec2* game_object_get_resolution(GameObject* gameObject){
+	if(!gameObject || !gameObject->data)return NULL;
+	unsigned char properties = *((unsigned char*)gameObject->data);
+	if(!(properties & RESOLUTION_AVAILABLE))return NULL;
+	
+	return (uVec2*)((unsigned char*)(gameObject->data)+1);
+}
+uVec2* game_object_get_position(GameObject* gameObject){
+	if(!gameObject || !gameObject->data)return NULL;
+	unsigned char properties = *((unsigned char*)gameObject->data);
+	if(!(properties & POSITION_AVAILABLE))return NULL;
+	//PROPERTIES
+	size_t offset = sizeof(unsigned char);
+	if(properties & RESOLUTION_AVAILABLE)offset+=sizeof(uVec2);
+	
+	if(properties & USE_PHYSIC)return *(uVec2**)((unsigned char*)(gameObject->data)+offset);
+	else return (uVec2*)((unsigned char*)(gameObject->data)+offset);
+}
+unsigned char* game_object_get_dim(GameObject* gameObject){
+	if(!gameObject || !gameObject->data)return NULL;
+	unsigned char properties = *((unsigned char*)gameObject->data);
+	if(!(properties & DIM_AVAILABLE))return NULL;
+	//PROPERTIES
+	size_t offset = sizeof(unsigned char);
+	if(properties & RESOLUTION_AVAILABLE)offset+=sizeof(uVec2);
+	
+	if(properties & POSITION_AVAILABLE)offset+=((properties & USE_PHYSIC) ? sizeof(uVec2*) : sizeof(uVec2));
+	return ((unsigned char*)(gameObject->data)+offset);
+}
+unsigned char* game_object_get_data(GameObject* gameObject){
+	if(!gameObject || !gameObject->data)return NULL;
+	unsigned char properties = *((unsigned char*)gameObject->data);
+	//PROPERTIES
+	size_t offset = sizeof(unsigned char);
+	if(properties & RESOLUTION_AVAILABLE)offset+=sizeof(uVec2);
+	if(properties & POSITION_AVAILABLE)offset+=((properties & USE_PHYSIC) ? sizeof(uVec2*) : sizeof(uVec2));
+	if(properties & DIM_AVAILABLE)offset+=sizeof(unsigned char);
+	return ((unsigned char*)(gameObject->data)+offset);	
 }
 
 // Display | Setup | 0 = Success

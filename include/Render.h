@@ -34,6 +34,10 @@ unsigned char game_object_mgr_create(GameObjectMgr* mgr, size_t length);
 unsigned char game_object_mgr_destroy(GameObjectMgr* mgr);
 unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec2* position, unsigned char dim, unsigned char flag, void* data);
 unsigned char game_object_destroy(GameObject* gameObject);
+uVec2* game_object_get_resolution(GameObject* gameObject);
+uVec2* game_object_get_position(GameObject* gameObject);
+unsigned char* game_object_get_dim(GameObject* gameObject);
+unsigned char* game_object_get_data(GameObject* gameObject);
 
 typedef union{
 	unsigned int raw;
