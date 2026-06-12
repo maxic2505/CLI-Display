@@ -196,29 +196,30 @@ unsigned char render_frame(Display* display){
 
 	char* buffer = malloc((display->data_size*20) + display->resolution.y + 1);
 	if(!buffer)return 1;
-	unsigned int rendered = 0;
-	unsigned int rendered_y = 0;
+	unsigned int rendered = 1;
 	unsigned int offset = 0;
 	Color last_color = {0};
 
-	unsigned char first_pixel = 1;
-
 	Color* color_arr = (Color*)display->data;
-	for(int i = 0; i<display->data_size; i++){
+	
+	offset += sprintf(&buffer[offset], "\033[38;2;%d;%d;%dmX", color_arr[0].r, color_arr[0].g, color_arr[0].b);
+	for(int i = 1; i<display->data_size; i++){
 		Color color = color_arr[i];
-		if(!first_pixel && color.raw == last_color.raw) buffer[offset++] = 'X';
+		if(color.raw == last_color.raw) buffer[offset++] = 'X';
 		else {
 			offset += sprintf(&buffer[offset], "\033[38;2;%d;%d;%dmX", color.r, color.g, color.b);
-			first_pixel = 0;
 		}
 		rendered++;
 		last_color = color;
 		if(rendered >= display->resolution.x){
-			rendered_y++;
-			if(rendered_y < display->resolution.y)buffer[offset++] = '\n';
 			rendered = 0;
+			buffer[offset++] = '\n';
 		}
 	}
+	if(offset > 0 && buffer[offset - 1] == '\n'){
+		offset--;
+		buffer[offset] = '\0';
+	}else buffer[offset] = '\0';
 	fwrite(buffer, 1, offset, stdout);
 	fflush(stdout);
 	free(buffer);
