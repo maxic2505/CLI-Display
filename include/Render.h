@@ -59,7 +59,9 @@ typedef struct Display{
 
 unsigned char display_init(Display* display);
 unsigned char display_free(Display* display);
-unsigned char display_draw_game_object(Display* display, GameObject* gameObject);
 unsigned char render_frame(Display* display);
+
+unsigned int move_cursor(uVec2 res, uVec2 dot);
 unsigned char draw_pixel(Display* display, uVec2 dot, Color dot_color);
 unsigned char draw_line(Display* display, uVec2 a, uVec2 b, Color color);
+unsigned char display_draw_game_object(Display* display, GameObject* gameObject);

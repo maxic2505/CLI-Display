@@ -18,7 +18,10 @@ unsigned char game_object_mgr_create(GameObjectMgr* mgr, size_t length){
 unsigned char game_object_mgr_destroy(GameObjectMgr* mgr){
 	if(!mgr || !mgr->data)return 1;
 	for(int i = 0; i<(mgr->length); i++){
-		if(mgr->data[i].data)free(mgr->data[i].data);
+		if(mgr->data[i].data){	
+			free(mgr->data[i].data);
+			mgr->data[i].data = NULL;
+		}
 	}
 	free(mgr->data);
 	mgr->data = NULL;
@@ -125,6 +128,11 @@ unsigned char* game_object_get_data(GameObject* gameObject){
 	return ((unsigned char*)(gameObject->data)+offset);	
 }
 
+int positive(int var){
+	if(var<0)return var * -1;
+	else return var;
+}
+
 // Display | Setup | 0 = Success
 unsigned char display_init(Display* display){
 	// Resolution
@@ -148,45 +156,6 @@ unsigned char display_free(Display* display){
 		display->data = NULL;
 	}
 	memset(display, 0, sizeof(Display));
-	return 0;
-}
-
-unsigned char display_draw_game_object(Display* display, GameObject* gameObject){
-	if(!display || !display->data || !gameObject || !gameObject->data) return 1;
-
-	Color* pixel = (Color*)display->data;
-
-	unsigned char* data_ptr = (unsigned char*)gameObject->data;
-	unsigned char data_flags = data_ptr[0];
-	uVec2 resolution = {0};
-	uVec2 local_position = {0};
-	uVec2* phys_position = NULL;
-
-	unsigned int pixel_num = (display->resolution.x * display->resolution.y);
-
-	size_t offset = 1; // 1 because data[0] = properties;
-	
-	if(data_flags | BACKGROUND){
-		Color pixel_data = *(Color*)(data_ptr+offset);
-		for(int i = 0; i<pixel_num; i++){
-			((Color*)(display->data))[i] = pixel_data;
-		}
-	}else{
-		if(data_flags & RESOLUTION_AVAILABLE){
-			uVec2 resolution = *((uVec2*)(data_ptr+offset));
-			offset += sizeof(uVec2);
-		}
-		if(data_flags & POSITION_AVAILABLE){
-			if(data_flags & USE_PHYSIC) phys_position = *((uVec2**)(data_ptr+offset)); 
-			else local_position = *((uVec2*)(data_ptr+offset));
-			offset += ((data_flags & USE_PHYSIC) ? sizeof(uVec2*) : sizeof(uVec2));
-		}
-		Color* pixel_data =	(Color*)(data_ptr+offset);
-		for(int i = 0; i<pixel_num; i++){
-			((Color*)(display->data))[i] = pixel_data[i];
-		}
-	}
-	
 	return 0;
 }
 
@@ -239,11 +208,6 @@ unsigned char draw_pixel(Display* display, uVec2 dot, Color dot_color){
 	return 0;
 }
 
-int positive(int var){
-	if(var<0)return var * -1;
-	else return var;
-}
-
 unsigned char draw_line(Display* display, uVec2 a, uVec2 b, Color color){
 	if(!display || !display->data)return 1;
 	
@@ -260,11 +224,63 @@ unsigned char draw_line(Display* display, uVec2 a, uVec2 b, Color color){
 	float y_inc = dy/(float)steps;
 
 	Vec2 brush = (Vec2){.x=(float)a.x, .y=(float)a.y};
+	// draw
 	for(int i = 0; i<=steps; i++){
 		draw_pixel(display, (uVec2){.x=(unsigned int)(brush.x+0.5f), .y=(unsigned int)(brush.y+0.5f)}, color);
 		brush.x += x_inc;
 		brush.y += y_inc;
 	}
 
+	return 0;
+}
+
+unsigned char display_draw_game_object(Display* display, GameObject* gameObject){
+	if(!display || !display->data || !gameObject || !gameObject->data) return 1;
+
+	Color* pixel = (Color*)display->data;
+
+	unsigned char* data_ptr = (unsigned char*)gameObject->data;
+	unsigned char data_flags = data_ptr[0];
+	uVec2 resolution = {0};
+	uVec2 local_position = {0};
+	uVec2* phys_position = NULL;
+
+	unsigned int pixel_num = (display->resolution.x * display->resolution.y);
+
+	size_t offset = 1; // 1 because data[0] = properties;
+
+	if(data_flags & BACKGROUND){
+		Color pixel_data = *(Color*)(data_ptr+offset);
+		// draw
+		for(int i = 0; i<pixel_num; i++){
+			((Color*)(display->data))[i] = pixel_data;
+		}
+	}else{
+		// get all data
+		if(data_flags & RESOLUTION_AVAILABLE){
+			resolution = *((uVec2*)(data_ptr+offset));
+			offset += sizeof(uVec2);
+		}
+		if(data_flags & POSITION_AVAILABLE){
+			if(data_flags & USE_PHYSIC) phys_position = *((uVec2**)(data_ptr+offset)); 
+			else local_position = *((uVec2*)(data_ptr+offset));
+			offset += ((data_flags & USE_PHYSIC) ? sizeof(uVec2*) : sizeof(uVec2));
+		}
+		Color* pixel_data =	(Color*)(data_ptr+offset);
+		unsigned int brush = move_cursor(display->resolution, (phys_position) ? *phys_position : local_position);
+		uVec2 brush_res = {0};
+		//printf("Res: %d | %d\n", resolution.x, resolution.y);
+		// draw - prototype
+		for(unsigned int i = 0; i<(resolution.x*resolution.y); i++){
+			unsigned int pixel = brush+move_cursor(display->resolution, brush_res);
+			//printf("Drw: %d\n", pixel);
+			((Color*)display->data)[pixel] = pixel_data[i];
+			brush_res.x++;
+			if(brush_res.x >= 3){
+				brush_res.x = 0;
+				brush_res.y++;
+			}
+		}
+	}
 	return 0;
 }
