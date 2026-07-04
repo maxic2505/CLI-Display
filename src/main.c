@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "Render.h"
+#include "SjenaDeskEngine/Input/Input.h"
 
 int main(){
 	Display display = {0};
@@ -45,22 +46,20 @@ int main(){
 	uVec2* position = game_object_get_position(&mgr.data[1]);
 	//unsigned char* dim = game_object_get_dim(&mgr.data[0]);
 	//Color* color_ptr = (Color*)game_object_get_data(&mgr.data[0]);
-
-	for(unsigned char i = 0; i<10; i++){
-		usleep(1000000);
-		position->x++;
-		display_draw_game_object(&display, &mgr.data[0]);
-		display_draw_game_object(&display, &mgr.data[1]);
+	input_key_setup_api();
+	unsigned char running = 1;
+	while(running){
+		input_key_handler_api();
+		if(getKey(KEYCODE_ESC))running = 0;
+		if(getKeyDown(KEYCODE_W))position->y--;
+		if(getKeyDown(KEYCODE_A))position->x--;
+		if(getKeyDown(KEYCODE_S))position->y++;
+		if(getKeyDown(KEYCODE_D))position->x++;
+		display_draw_game_objects_mgr(&display, &mgr);
 		render_frame(&display);
+		usleep(33000);
 	}
 	
-	// DEBUG DATA
-	printf("Resolution: (%d|%d)\nPIXEL_SIZE: %d\n", display.resolution.x, display.resolution.y, display.data_size);
-	//printf("GameObject---------\n");
-	//if(resolution)printf("res: .x = %u, .y = %u\n", resolution->x, resolution->y);
-	//if(position)printf("pos: .x = %u, .y = %u\n", position->x, position->y);
-	//if(dim)printf("dim: %d\n", *dim);
-
 	// SAFE CLEANUP
 	game_object_mgr_destroy(&mgr);
 	display_free(&display);

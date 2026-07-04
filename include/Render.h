@@ -20,6 +20,16 @@
 
 void set_flag(unsigned char* s_flag, unsigned char t_flag, unsigned char value);
 
+typedef union{
+	unsigned int raw;
+	struct{
+		unsigned char a;
+		unsigned char b;
+		unsigned char g;
+		unsigned char r;
+	};
+}Color;
+
 typedef struct GameObject{
 	unsigned long long data_size;
 	void* data;
@@ -34,20 +44,11 @@ unsigned char game_object_mgr_create(GameObjectMgr* mgr, size_t length);
 unsigned char game_object_mgr_destroy(GameObjectMgr* mgr);
 unsigned char game_object_create(GameObject* gameObject, uVec2* resolution, uVec2* position, unsigned char dim, unsigned char flag, void* data);
 unsigned char game_object_destroy(GameObject* gameObject);
+
 uVec2* game_object_get_resolution(GameObject* gameObject);
 uVec2* game_object_get_position(GameObject* gameObject);
 unsigned char* game_object_get_dim(GameObject* gameObject);
 unsigned char* game_object_get_data(GameObject* gameObject);
-
-typedef union{
-	unsigned int raw;
-	struct{
-		unsigned char a;
-		unsigned char b;
-		unsigned char g;
-		unsigned char r;
-	};
-}Color;
 
 typedef struct Display{
 	void* data;
@@ -62,6 +63,8 @@ unsigned char display_free(Display* display);
 unsigned char render_frame(Display* display);
 
 unsigned int move_cursor(uVec2 res, uVec2 dot);
+
 unsigned char draw_pixel(Display* display, uVec2 dot, Color dot_color);
 unsigned char draw_line(Display* display, uVec2 a, uVec2 b, Color color);
 unsigned char display_draw_game_object(Display* display, GameObject* gameObject);
+unsigned char display_draw_game_objects_mgr(Display* display, GameObjectMgr* mgr);

@@ -284,3 +284,11 @@ unsigned char display_draw_game_object(Display* display, GameObject* gameObject)
 	}
 	return 0;
 }
+unsigned char display_draw_game_objects_mgr(Display* display, GameObjectMgr* mgr){
+	if(!display || !display->data || !mgr || !mgr->data) return 1;
+	for(int i = 0; i<mgr->length; i++){
+		if(!mgr->data[i].data)return 0;
+		display_draw_game_object(display, &mgr->data[i]);
+	}
+	return 0;
+}
