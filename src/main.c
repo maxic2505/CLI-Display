@@ -1,9 +1,29 @@
-#include <sys/ioctl.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <termios.h>
+#include <sys/ioctl.h>
 #include "Render.h"
-#include "SjenaDeskEngine/Input/Input.h"
+//#include "SjenaDeskEngine/Input/Input.h"
+
+// INPUT
+int getch(){
+	int ch;
+	struct termios oldt;
+	struct termios newt;
+
+	tcgetattr(STDIN_FILENO, &oldt);
+	newt = oldt;
+	newt.c_lflag &= ~(ICANON | ECHO);
+
+	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+	ch = getchar();
+
+	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+	
+	return ch;
+}
 
 int main(){
 	Display display = {0};
@@ -46,18 +66,16 @@ int main(){
 	uVec2* position = game_object_get_position(&mgr.data[1]);
 	//unsigned char* dim = game_object_get_dim(&mgr.data[0]);
 	//Color* color_ptr = (Color*)game_object_get_data(&mgr.data[0]);
-	input_key_setup_api();
 	unsigned char running = 1;
 	while(running){
-		input_key_handler_api();
-		if(getKey(KEYCODE_ESC))running = 0;
-		if(getKeyDown(KEYCODE_W))position->y--;
-		if(getKeyDown(KEYCODE_A))position->x--;
-		if(getKeyDown(KEYCODE_S))position->y++;
-		if(getKeyDown(KEYCODE_D))position->x++;
+		char key = getch();// Termux compatible but not great, i would habe used my Engine :(
+		if(key == 'q')running = 0;
+		else if(key == 'w')position->y--;
+		else if(key == 'a')position->x--;
+		else if(key == 's')position->y++;
+		else if(key == 'd')position->x++;
 		display_draw_game_objects_mgr(&display, &mgr);
 		render_frame(&display);
-		usleep(33000);
 	}
 	
 	// SAFE CLEANUP
